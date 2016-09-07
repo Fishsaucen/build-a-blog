@@ -1,0 +1,49 @@
+div.container {
+  background-color: pink;
+  width: 100%;
+}
+div.navbar {
+  background-color: pink;
+}
+.first_link {
+  margin: auto;
+  padding-left: 40%;
+}
+.navbar a {
+  margin: auto;
+  text-align: center;
+  margin-left: 2%;
+}
+div.left_separator {
+  background-color: black;
+  float: left;
+  width: 30%;
+}
+
+div.current_post {
+  background-color: blue;
+  float: left;
+  width: 40%;
+}
+
+.current_post h2 {
+  text-align: center;
+}
+
+.current_post pre {
+  padding-left: 10px;
+}
+
+div.recent_entries {
+  background-color: orange;
+  float: right;
+  width: 30%;
+}
+
+.recent_entries h4 {
+  text-align: center;
+}
+
+.recent_entries pre {
+  padding-left: 10px;
+}

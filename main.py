@@ -23,6 +23,16 @@ template_dir = os.path.join(os.path.dirname(__file__), "templates")
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
                               autoescape=True)
 
+def get_posts(limit, offset):
+    """
+    queries database for BlogEntry posts and returns the list. The number of 
+    posts is determined by limit. offset determines when we start adding posts.
+    """
+    posts = db.GqlQuery("SELECT * FROM BlogEntry ORDER BY created DESC "
+                                "LIMIT {limit} OFFSET {offset}"
+                                "".format(limit=limit, offset=offset))
+    return  posts
+
 class BlogEntry(db.Model):
     title = db.StringProperty(required = True)
     entry = db.TextProperty(required = True)
@@ -46,16 +56,20 @@ class MainHandler(Handler):
 
 class BlogHandler(Handler):
     def get(self, error=""):
+        page = self.request.get('page')
         self.request.get('error')
-        # offset set to one so we display the most recent post then the next 5 entries
-        offset = 1
         # returns a list of most recent entries so we must select the first element
-        current_post = db.GqlQuery("SELECT * FROM BlogEntry ORDER BY created DESC " 
-                                   "LIMIT 1 ")
-        current_post = current_post[0]
-        entries = db.GqlQuery("SELECT * FROM BlogEntry ORDER BY created DESC "
-                "LIMIT 5 OFFSET {offset}".format(offset=1))
-        self.render('blog.html', current_post=current_post, entries=entries, error=error)
+        #current_post = db.GqlQuery("SELECT * FROM BlogEntry ORDER BY created DESC " 
+        #                           "LIMIT 1 ")
+        #current_post = current_post[0]
+        #entries = db.GqlQuery("SELECT * FROM BlogEntry ORDER BY created DESC "
+        #        "LIMIT 5 OFFSET {offset}".format(offset=1))
+        limit = 6
+        offset = 0
+        if (page):
+            offset = int(page) * 5 - 5
+        entries = get_posts(limit, offset)
+        self.render('blog.html', current_post=entries[0], entries=entries[1:limit], error=error)
 
 class NewPostHandler(Handler):
     def post(self):
@@ -93,7 +107,6 @@ class ViewPostHandler(Handler):
             error = "Could not find post #{}".format(id)
 
         self.render('blog.html', current_post=current_post, entries=entries, error=error)
-        #self.response.write(entry.key().id())
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
