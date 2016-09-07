@@ -1,0 +1,31 @@
+{% extends "index.html" %}
+
+{% block content %}
+
+  <!-- empty div to provide padding on left -->
+  <div class="left_separator"></div>
+  <!-- first div: show selected post at center of page.
+       second div: show the first sentence or x chars of the next 5 posts,
+                   make sure to provide a link. create a submit button to
+                   show the next 5 posts or the previous 5 posts. use variable
+                   'offset'. if there are not 5 more posts, show the last five
+                   posts of the db.
+  -->
+  <!-- most current or selected entry -->
+  <div class="current_post">
+    <h2>{{current_post.title}}</h2>
+    <pre>{{current_post.entry}}</pre>
+    <div class="error">{{error}}</div>
+  </div>
+
+  <div class="recent_entries">
+    {% for entry in entries %}
+      <hr>
+      <a href="/blog/{{entry.key().id()}}">
+        <h4>{{entry.title}}</h4>
+      </a>
+      <pre>{{entry.entry}}</pre>
+    {% endfor %}
+  </div>
+
+{% endblock %}

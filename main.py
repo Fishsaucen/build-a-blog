@@ -23,6 +23,11 @@ template_dir = os.path.join(os.path.dirname(__file__), "templates")
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
                               autoescape=True)
 
+class BlogEntry(db.Model):
+    title = db.StringProperty(required = True)
+    entry = db.TextProperty(required = True)
+    created = db.DateTimeProperty(auto_now_add = True)
+
 class Handler(webapp2.RequestHandler):
     def write(self, *a, **kw):
         self.response.write(*a, **kw)
@@ -36,8 +41,63 @@ class Handler(webapp2.RequestHandler):
 
 class MainHandler(Handler):
     def get(self):
-        self.response.write('index.html')
+        # dirty hack?
+        self.redirect('/blog')
+
+class BlogHandler(Handler):
+    def get(self, error=""):
+        self.request.get('error')
+        # offset set to one so we display the most recent post then the next 5 entries
+        offset = 1
+        # returns a list of most recent entries so we must select the first element
+        current_post = db.GqlQuery("SELECT * FROM BlogEntry ORDER BY created DESC " 
+                                   "LIMIT 1 ")
+        current_post = current_post[0]
+        entries = db.GqlQuery("SELECT * FROM BlogEntry ORDER BY created DESC "
+                "LIMIT 5 OFFSET {offset}".format(offset=1))
+        self.render('blog.html', current_post=current_post, entries=entries, error=error)
+
+class NewPostHandler(Handler):
+    def post(self):
+        title = self.request.get('title')
+        entry = self.request.get('entry')
+        error = self.request.get('error') 
+
+        if (not title):
+            error = "Your post needs a title."
+        elif (not entry):
+            error = "You need to create a blog entry."
+
+        if (error):
+            self.render('newpost.html', title=title, entry=entry, error=error)
+        else:
+            # add the title and entry to db
+            blog_post = BlogEntry(title=title, entry=entry) 
+            blog_post.put()
+
+            #FIXME need to redirect to /blog/id , where id is the post we just submitted
+            #self.response.write(blog_post.name())
+            self.redirect('/blog/' + str(blog_post.key().id()))
+
+    def get(self, title="", body="", error=""):
+        self.render('newpost.html', title=title, body=body, error=error)
+
+class ViewPostHandler(Handler):
+    def get(self, id):
+        offset=1
+        current_post = BlogEntry.get_by_id(int(id))
+        entries = db.GqlQuery("SELECT * FROM BlogEntry ORDER BY created DESC "
+                               "LIMIT 5 OFFSET {offset}".format(offset=offset))
+        error=self.request.get('error')
+        if (not current_post):
+            error = "Could not find post #{}".format(id)
+
+        self.render('blog.html', current_post=current_post, entries=entries, error=error)
+        #self.response.write(entry.key().id())
 
 app = webapp2.WSGIApplication([
-    ('/', MainHandler)
+    ('/', MainHandler),
+    ('/blog', BlogHandler),
+    ('/blog/newpost', NewPostHandler),
+    webapp2.Route('/blog/<id:\d+>', ViewPostHandler),
 ], debug=True)
