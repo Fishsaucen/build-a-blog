@@ -1,0 +1,6 @@
+- index.html needs to work regardless if there are no posts
+- instead of redirecting the user to /blog/newpost when the db is empty, create
+  'getting started' entry and display that. delete 'getting started' once a new post
+  has been entered.
+- apply styles to '/blog/post_id', currently styles are not used when viewing a post
+  after following the link to it's id.
