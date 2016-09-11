@@ -56,20 +56,30 @@ class MainHandler(Handler):
 
 class BlogHandler(Handler):
     def get(self, error=""):
-        page = self.request.get('page')
+        #page = self.request.get('page')
         self.request.get('error')
-        # returns a list of most recent entries so we must select the first element
-        #current_post = db.GqlQuery("SELECT * FROM BlogEntry ORDER BY created DESC " 
-        #                           "LIMIT 1 ")
-        #current_post = current_post[0]
-        #entries = db.GqlQuery("SELECT * FROM BlogEntry ORDER BY created DESC "
-        #        "LIMIT 5 OFFSET {offset}".format(offset=1))
-        limit = 6
-        offset = 0
-        if (page):
-            offset = int(page) * 5 - 5
-        entries = get_posts(limit, offset)
-        self.render('blog.html', current_post=entries[0], entries=entries[1:limit], error=error)
+        """ note: if db is empty there is an IndexError exception. instead of trying to
+                  render the /blog page it would be best to check if the db is empty and 
+                  create an intial 'getting started' post with instructions on how to
+                  create a post. for now we'll redirect the user to the /newpost page.
+        """
+        try:
+            # returns a list of most recent entries so we must select the first element
+            current_post = db.GqlQuery("SELECT * FROM BlogEntry ORDER BY created DESC " 
+                                       "LIMIT 1 ")
+            current_post = current_post[0]
+                
+            entries = db.GqlQuery("SELECT * FROM BlogEntry ORDER BY created DESC "
+                                  "LIMIT 5 OFFSET {offset}".format(offset=1))
+            #limit = 6
+            #offset = 0
+            #if (page):
+            #    offset = int(page) * 5 - 5
+            #entries = get_posts(limit, offset)
+            self.render('blog.html', current_post=current_post, 
+                        entries=entries, error=error)
+        except IndexError:
+            self.redirect('/blog/newpost')
 
 class NewPostHandler(Handler):
     def post(self):
